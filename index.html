@@ -64,17 +64,18 @@
       <li>Les accords sont notés "C", "A","G","D","E","F"</li>
     </ul>
     <textarea id="commands" placeholder="Entrez vos commandes ici...">
-T:J'ai vu le loup, le renard et la belette
-M:2/4
-|:"C" c2 BA | G2 "G" AB| cB cd| "C"e2 c2 | c2 BA |
-"F"G2 AB|"G"c2 d2|"C" c4:| "C"c2 d2 |"F"e2 f2|"G"e2 d2|
-"C"e4 |c2 cB|"F"A2 AG| A2 B2|  "G"A2 G | "C"c2 d2 |"F"e2 f2|"G"e2 d2|
-"C"e4 |c2 cB|"F"A2 AG| A2 B2| "G"c4|
+T:The butterfly
+M:9/8
+K:G
+|:"E" B2E G2E "D" F3 | "E" B2E G2E "D" FED|"E" B2E G2E "D" F3 |"G" B2 d d2 B "D" AFD :|
+|:"E"B2c e2f g3| B2c g2e "D" dBA| "E"B2c e2f g2a|"G"b2a g2e "D" dBA:|
+|: "E"BcB B2A G2A| BcB BAB "D"dBA| "E"BcB B2A G2A | "G"B2d g2e "D" dBA:|
+
 
     </textarea>
     <button onclick="dessiner()">Dessiner la tablature</button>
     <button onclick="exporterPDF()" style="background-color: #28a745;">Télécharger en PDF</button>
-    <button onclick="exporterABC()">Télécharger en ABC</button>
+    <button onclick="exporterABC()">Sauver en ABC</button>
     <button onclick="document.getElementById('abcFile').click()">Charger un fichier ABC</button>
     <input id="abcFile" type="file" accept=".abc,text/plain" hidden onchange="chargerABC(this.files[0])">
   </div>
@@ -106,6 +107,10 @@ M:2/4
     const tire2=[FA2,SI2,RE3,FA3,LA3,SI3,RE4,FA4,LA4,SI4];
     const pousse1=[SOLd2,RE2,SOL2,SI2,RE3,SOL3,SI3,RE4,SOL4,SI4,RE5];
     const tire1=[MI2,FAd2,LA2,DO3,MI3,FAd3,LA3,DO4,MI4,FAd4,LA4];
+
+    let key="";
+    let titre="partition";
+    let accord="";
     
     function tablature(){
       function findNote(sens, numNote) {
@@ -161,14 +166,13 @@ M:2/4
               const lignes = donneesPartition.notes;
       lignes.forEach(note => {
         accord = note.accord;
-        if ((accord=="C")||(accord="E")){
-          nt=findNote(1, note.numNote);
-          if (nt) { note.tab=nt;} 
-        } 
-        else if ((accord=="A")){
-          nt=findNote(2, note.numNote);
-          if (nt) { note.tab=nt;} 
-        } 
+        if (accord === "C" || accord === "E") {
+          nt = findNote(1, note.numNote);
+          if (nt) { note.tab = nt; }
+        } else if (accord === "A" || accord === "D") {
+          nt = findNote(2, note.numNote);
+          if (nt) { note.tab = nt; }
+        }
         else
         {
           nt=findNote(1, note.numNote);
@@ -178,7 +182,7 @@ M:2/4
             if (nt) { note.tab=nt;} 
           }
         }
-        
+        //console.log("note : "+note.numNote+"Accord : "+accord+ "tab: "+nt)
       });
     }
 
@@ -191,15 +195,15 @@ M:2/4
     }
 
     // Dessine la tablature  
-    function dessinerTablature() {
+    function dessinerTablature1() {
       tablature();
      // ctx.clearRect(0, 0, canvas.width, canvas.height);
       const lignes = donneesPartition.notes;
       lignes.forEach(note => {
-        console.log("note=" + note.numNote + " duree=" + note.duree + " x=" + note.x + " portee=" + note.portee);
+        //console.log("note=" + note.numNote + " duree=" + note.duree + " x=" + note.x + " portee=" + note.portee);
         const y = basePortee(note.portee, espaceligne)+dectablature;
         ctx.beginPath();
-        ctx.font = '20px Arial';
+        ctx.font = '16px Arial';
               ctx.fillStyle = '#000';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
@@ -218,9 +222,44 @@ M:2/4
         
       });
     }
+
+    function dessinerBarTab(nportee)
+    {
+        const y = basePortee(nportee, espaceligne)+dectablature;
+        //console.log('dessinerbarTab nportee='+nportee+'y='+y);
+        ctx.beginPath();
+        ctx.moveTo(debportee, y+8);
+        ctx.lineTo(finportee, y +8);
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+    
+    // Tablature en deux lignes
+    function dessinerTablature2() {   
+      tablature();
+     // ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const lignes = donneesPartition.notes;
+      lignes.forEach(note => {
+       // console.log("note=" + note.numNote + " duree=" + note.duree + " x=" + note.x + " portee=" + note.portee);
+        const y = basePortee(note.portee, espaceligne)+dectablature;
+        sens=note.tab.charAt(0);
+        ctx.beginPath();
+        ctx.font = '16px Arial';
+              ctx.fillStyle = '#000';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+             
+              if (sens=="t") ctx.fillText(note.tab.substring(1), note.x, y+20); 
+                else ctx.fillText(note.tab.substring(1), note.x, y);
+              //ctx.fillText(note.tab, note.x, y);
+               ctx.fill();
+        
+      });
+    }
  
     // Dessine une portée musicale avec 5 lignes horizontales.
-    function portee(n, espaceligne) {
+    function portee(n, espaceligne,metre) {
       const y = basePortee(n, espaceligne);
       ctx.lineWidth = 1;
       for (let i = 0; i < 5; i++) {
@@ -231,15 +270,25 @@ M:2/4
         ctx.lineWidth = 1;
         ctx.stroke();
       }
+      console.log(metre);
+      ctx.beginPath();
+        ctx.font = '14px Arial';
+              ctx.fillStyle = '#000';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+      ctx.fillText(metre[0], debportee+debnote-20, y+espaceligne);
+      ctx.fillText(metre[1], debportee+debnote-20, y+3*espaceligne);
+      ctx.fill();
     }
 
 
 
     // Dessine une note selon sa duree : croche (1), noire (2), blanche (4)
     // ou ronde (8). reliee indique qu'une croche appartient a un groupe.
-    function dessinerNote(x, note, duree, espace, yHaut, reliee) {
-      ligne = 2.5 - note / 2;
+    function dessinerNote(x, note, duree, espace, yHaut, reliee, espacenote) {
+      let ligne = 2.5 - note / 2;
       const y = yHaut + (ligne * espace);
+      if (typeof espacenote === 'undefined') espacenote = espace;
       hn = Math.round(espace / 2);
       wn = Math.round(espace);
       hampe = 4.5 * espace;
@@ -265,6 +314,19 @@ M:2/4
           ctx.ellipse(x, y, wn, hn, -Math.PI / 10, 0, 2 * Math.PI);
           ctx.fill();
           break;
+        case 3: // noire pointée
+          ctx.fillStyle = 'black';
+          ctx.beginPath();
+          ctx.moveTo(x + 5, y);
+          ctx.lineTo(x + 5, y - hampe);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(x, y, wn, hn, -Math.PI / 10, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(x + 3 * espacenote, y, espace / 3, espace / 3, 0, 0, 2 * Math.PI);
+          ctx.fill();
+          break;
         case 4: // blanche
           ctx.fillStyle = 'white';
           ctx.lineWidth = 1;
@@ -288,6 +350,14 @@ M:2/4
           ctx.fillStyle = 'black';
       }
 
+      if (note>=7){
+        ctx.beginPath();
+        ligne=Math.trunc(ligne);
+          ctx.moveTo(x -2*espace, yHaut + (ligne * espace));
+          ctx.lineTo(x + 2*espace, yHaut + (ligne * espace) );
+          ctx.stroke();
+      }
+
 
 
     }
@@ -297,7 +367,7 @@ M:2/4
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x, y + 4 * espaceligne);
+      ctx.lineTo(x, y + 4 * espaceligne+dectablature+16);
       ctx.strokeStyle = 'black';
       ctx.stroke();
     }
@@ -348,12 +418,12 @@ M:2/4
     // Dessine le symbole de reprise : barre verticale et deux points.
     function dessiner2pts(s,x, nportee, espaceligne) {
       const y = basePortee(nportee, espaceligne);
-      if (s==1) { db=0; dp=5; } else { db=5; dp=0; }
+      if (s==1) { db=0; dp=5; } else { db=0; dp=-5; }
       ctx.fillStyle = 'black';
       ctx.beginPath();
       ctx.ligneWidth = 8;
       ctx.moveTo(x+db, y);
-      ctx.lineTo(x+db, y + espaceligne * 4);
+      ctx.lineTo(x+db, y + espaceligne * 4+dectablature+16);
       ctx.stroke();
       ctx.beginPath();
       ctx.ellipse(x + dp, y + espaceligne * 1.5, espaceligne / 3, espaceligne / 3, 0, 0, 2 * Math.PI);
@@ -392,7 +462,6 @@ M:2/4
   return resultats;
 }
 
-//console.log(tokenizer('|:"C" c2 BA | G2 "G" AB| cB cd| "C"e2 c2 | c2 BA |',["|:",":|"]));
 
     function tokenizerABC(ligne) {
       const tokens = [];
@@ -449,6 +518,11 @@ M:2/4
       const groupeCroches = [];
 
       function stockerNote(dureeNote,numNote,naccord) {
+        if (key=="G"){ // A améliorer
+          if (numNote==FA2) numNote=FAd2;
+          if (numNote==FA3) numNote=FAd3;
+          if (numNote==FA4) numNote=FAd4;
+        }
         if (fd == 1) {
           donneesPartition.notes.push({
             numNote: numNote,
@@ -470,7 +544,7 @@ M:2/4
 
         if (fd == 1) {
           groupeCroches.forEach(croche => {
-            dessinerNote(croche.x, croche.note, 1, espaceligne, croche.yHaut, groupeCroches.length > 1);
+            dessinerNote(croche.x, croche.note, 1, espaceligne, croche.yHaut, groupeCroches.length > 1, espacenote);
           });
 
           if (groupeCroches.length > 1) {
@@ -511,7 +585,7 @@ M:2/4
         if (duree == 1) {
           if (note == -1) {
             stockerNote(duree, note, accord);
-            if (fd == 1) dessinerNote(x, note, duree, espaceligne, basePortee(nportee, espaceligne));
+            if (fd == 1) dessinerNote(x, note, duree, espaceligne, basePortee(nportee, espaceligne), espacenote);
             x = x + espacenote;
             nnote++;
             largeur += 1;
@@ -526,7 +600,7 @@ M:2/4
       // ou en largeur musicale. fd vaut 0 pour mesurer, 1 pour dessiner.
       const tokens = tokenizer(ligne, ["|:", ":|"]);
       for (const c of tokens) {
-        console.log(c);
+        //console.log(c);
         if (mode == 1) {
           if (c == '"') {
             mode = 0;
@@ -546,15 +620,18 @@ M:2/4
           }
         }
         else if (c == '"') {
+          
           mode = 1;
           accord = "";
         }
         else if (c == '|:') {
+          dessinerNoteEnAttente();
           largeur += 1;
           if (fd == 1) dessiner2pts(1,x, nportee, espaceligne);
           x = x + espacenote;
         }
         else if (c == ':|') {
+          dessinerNoteEnAttente();
           largeur += 1;
           if (fd == 1) dessiner2pts(2,x, nportee, espaceligne);
           x = x + espacenote;
@@ -579,7 +656,7 @@ M:2/4
           } else {
             finaliserGroupeCroches();
             stockerNote(dureeNote, note, accord);
-            if (fd == 1) dessinerNote(x, note, dureeNote, espaceligne, basePortee(nportee, espaceligne));
+            if (fd == 1) dessinerNote(x, note, dureeNote, espaceligne, basePortee(nportee, espaceligne), espacenote);
             x = x + espacenote * dureeNote;
             nnote++;
             largeur += dureeNote;
@@ -588,7 +665,7 @@ M:2/4
         }
         else if (c === 'z') {
           dessinerNoteEnAttente();
-          note = -1; // Silence
+          note = -100; // Silence
           nomNote = 'z';
           duree = 1;
         } else if (c === '|') {
@@ -616,7 +693,8 @@ M:2/4
       }
       dessinerNoteEnAttente();
       finaliserGroupeCroches();
-      if (fd == 1) portee(nportee, espaceligne);
+      if (fd == 1) portee(nportee, espaceligne,metre);
+      
       return largeur - 1;
     }
 
@@ -646,18 +724,20 @@ M:2/4
           ctx.textBaseline = 'middle'
           ctx.fillText(titre, canvas.width / 2, 20);
         }
-        else if (ligne.charAt(0) === 'M') { metre = ligne.substring(2); }
-        else if (ligne.charAt(0) === 'K') { clef = ligne.substring(2); }
+        else if (ligne.charAt(0) === 'M') { metre = ligne.substring(2); metre=metre.split("/");}
+        else if (ligne.charAt(0) === 'K') { key= ligne.substring(2); }
         else {
           largeur = parseABC(ligne, nportee, 7, 0);
           if (largeur > 0) {
             espacenote = (finportee - debnote) / largeur;
             //console.log("espacenote=" + espacenote + " largeur=" + largeur);
             parseABC(ligne, nportee, espacenote, 1);
+            dessinerBarTab(nportee);
             nportee++;
+            
           }
         }
-       dessinerTablature();
+       dessinerTablature2();
       });
 
 
@@ -702,7 +782,7 @@ M:2/4
       const url = URL.createObjectURL(fichier);
       const lien = document.createElement('a');
       lien.href = url;
-      lien.download = 'partition.abc';
+      lien.download = titre.substring(0,10)+'.abc';
       lien.click();
       URL.revokeObjectURL(url);
     }

@@ -64,12 +64,15 @@
       <li>Les accords sont notés "C", "A","G","D","E","F"</li>
     </ul>
     <textarea id="commands" placeholder="Entrez vos commandes ici...">
-T:The butterfly
-M:9/8
-K:G
-|:"E" B2E G2E "D" F3 | "E" B2E G2E "D" FED|"E" B2E G2E "D" F3 |"G" B2 d d2 B "D" AFD :|
-|:"E"B2d e2f g3| B2d g2e "D" dBA| "E"B2c e2f g2a|"G"b2a g2e "D" dBA:|
-|: "E"B2B B2A G2A| B2B BAB "D"dBA| "E"B2B B2A G2A | "G"B2d g2e "D" dBA:|
+T:Am Abbots Bromley Horn Dance
+M:6/8
+K:Cmaj
+A|"Am"E2A C2A|E2A A,2C|"E7"B,>CD "Am"C>DE|"E7"D>CB, "Am"C2 A|
+"Am"E2A C2A|E2A A,2C|"E7"B,>CD "Am"C>DE|"E7"D>CB, "Am"A,2 A| "Dm"F2A FGA|
+D2F DEF|"G"B,CD "Am"CB,A,|"G"G,A,B, "Am"E,2c|"F"A2c A>Bc|F2A F>GA|
+"G"G>FE "E7"D>CB,|"Am"A,3 A,2 D |:"Am"E>FE "Dm"F3|"Am"E>FE "Dm"A3|"Am"E>FE "E7"D>CB,|
+"Am"C2B, A,2 B,CD|"Am"E>FE "Dm"F3|"Am"E>FE "Dm"A3|"Am"E>FE "E7"D>CB,|"Am"A,3 A,3:|X:1
+
 
 
 
@@ -83,14 +86,14 @@ K:G
 
   <div class="panel">
     <h2>Tablature</h2>
-    <canvas id="myCanvas" width="700" height="700"></canvas>
+    <canvas id="myCanvas" width="700" height="1000"></canvas>
   </div>
 
   <script>
     // Parametres communs du dessin : espacement musical et limites du canvas.
     const espaceligne = 5;
     const debnote = 50;
-    const yportee = 100;
+    const yportee = 120;
     const debportee = 5;
     const dectablature=10 *espaceligne;
     const finportee = 695;
@@ -170,11 +173,13 @@ K:G
       }
               const lignes = donneesPartition.notes;
       lignes.forEach(note => {
-        accord = note.accord;
-        if (accord === "C" || accord === "E") {
+
+        accord = note.accord.substring(0, 1); // Prend la première lettre de l'accord
+        console.log("note : "+note.numNote+"Accord : "+note.accord+" accord="+accord);
+        if ((accord == "C") || (accord == "E")) {
           nt = findNote(1, note.numNote);
           if (nt) { note.tab = nt; }
-        } else if (accord === "A" || accord === "D") {
+        } else if ((accord == "A") || (accord == "D") || (accord == "B")) {
           nt = findNote(2, note.numNote);
           if (nt) { note.tab = nt; }
         }
@@ -275,14 +280,26 @@ K:G
         ctx.lineWidth = 1;
         ctx.stroke();
       }
+      // altérations
+      if (key=="G") {
+        ctx.beginPath();
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#000';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText("#", debportee+22, y);
+        ctx.fill();
+      }
+
+      // mesure
       console.log(metre);
       ctx.beginPath();
         ctx.font = '14px Arial';
               ctx.fillStyle = '#000';
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
-      ctx.fillText(metre[0], debportee+debnote-20, y+espaceligne);
-      ctx.fillText(metre[1], debportee+debnote-20, y+3*espaceligne);
+      ctx.fillText(metre[0], debportee+debnote-15, y+espaceligne);
+      ctx.fillText(metre[1], debportee+debnote-15, y+3*espaceligne);
       ctx.fill();
     }
 
@@ -383,7 +400,21 @@ function dessinerSilence(x,duree,espaceligne,yhaut,espacenote){
           ctx.moveTo(x -2*espace, yHaut + (ligne * espace));
           ctx.lineTo(x + 2*espace, yHaut + (ligne * espace) );
           ctx.stroke();
-      }
+      } 
+      if (note<=-6){
+        ctx.beginPath();
+        ligne=Math.trunc(ligne);
+          ctx.moveTo(x -2*espace, yHaut + (ligne * espace));
+          ctx.lineTo(x + 2*espace, yHaut + (ligne * espace) );
+          ctx.stroke();
+        if (note<=-9) {
+          ctx.beginPath();
+          ligne=7;
+            ctx.moveTo(x -2*espace, yHaut + (ligne * espace));
+            ctx.lineTo(x + 2*espace, yHaut + (ligne * espace) );
+            ctx.stroke();
+        }
+      } 
 
 
 
@@ -458,6 +489,21 @@ function dessinerSilence(x,duree,espaceligne,yhaut,espacenote){
       ctx.ellipse(x + dp, y + espaceligne * 1.5, espaceligne / 3, espaceligne / 3, 0, 0, 2 * Math.PI);
       ctx.ellipse(x + dp, y + espaceligne * 2.5, espaceligne / 3, espaceligne / 3, 0, 0, 2 * Math.PI);
       ctx.fill();
+    }
+
+     // Dessine le symbole de reprise : barre verticale et deux points.
+    function dessiner2bars(x, nportee, espaceligne) {
+      const y = basePortee(nportee, espaceligne);
+       db=0; dp=5; 
+      ctx.fillStyle = 'black';
+      ctx.beginPath();
+      ctx.ligneWidth = 8;
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y + espaceligne * 4+dectablature+16);
+      ctx.moveTo(x+db, y);
+      ctx.lineTo(x+db, y + espaceligne * 4+dectablature+16);
+      ctx.stroke();
+      
     }
 
   function tokenizer(texte, listeMots) {
@@ -581,7 +627,7 @@ function dessinerSilence(x,duree,espaceligne,yhaut,espacenote){
       
       // Parcourt la ligne ABC et transforme chaque symbole en element graphique
       // ou en largeur musicale. fd vaut 0 pour mesurer, 1 pour dessiner.
-      const tokens = tokenizer(ligne, ["|:", ":|"]);
+      const tokens = tokenizer(ligne, ["|:", ":|","||"]);
       for (const c of tokens) {
         //console.log(c);
         if (mode == 1) {
@@ -590,7 +636,7 @@ function dessinerSilence(x,duree,espaceligne,yhaut,espacenote){
             
             if (fd == 1) {
               //console.log("accord=" + accord);
-              ctx.font = '20px Arial';
+              ctx.font = '18px Arial';
               ctx.fillStyle = '#000';
               ctx.textAlign = 'left';
               ctx.textBaseline = 'middle'
@@ -619,6 +665,12 @@ function dessinerSilence(x,duree,espaceligne,yhaut,espacenote){
           if (fd == 1) dessiner2pts(2,x, nportee, espaceligne);
           x = x + espacenote;
         }
+        else if (c == '||') {
+          dessinerNoteEnAttente();
+          largeur += 1;
+          if (fd == 1) dessiner2bars(x, nportee, espaceligne);
+          x = x + espacenote;
+        }
         else if (['A', 'B', 'C', 'D', 'E', 'F', 'G'].includes(c)) {
           dessinerNoteEnAttente();
 
@@ -631,6 +683,12 @@ function dessinerSilence(x,duree,espaceligne,yhaut,espacenote){
           note = decnote(c.toUpperCase()) + 7;
           nomNote = c;
           duree = 1;
+        }
+        else if (c==',')  {
+          note = note - 7;
+        }
+        else if (c=="'") {
+          note = note + 7;
         }
         else if (['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(c)) {
           const dureeNote = parseInt(c);
@@ -756,7 +814,7 @@ function dessinerSilence(x,duree,espaceligne,yhaut,espacenote){
       // pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
 
       // Télécharger le fichier PDF
-      pdf.save('mon-dessin.pdf');
+      pdf.save((titre || 'partition').substring(0,10)+'.pdf');
     }
 
     async function sauvegarderABC() {
